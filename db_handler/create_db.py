@@ -42,7 +42,6 @@ def create_db() -> None:
     with ConnectDB() as (conn, cur):
         # example row 
         # status = {'reading', 'plan-to-read', 'suspended', 'finished'}
-        # datetime.now().strftime("%c")
         # ('book a', '978-3-16-148410-0', 'reading', 'Fri Aug  6 13:45:20 2021')
         sql_create_table = f""" 
             CREATE TABLE {TABLE_NAME}(

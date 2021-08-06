@@ -1,18 +1,16 @@
-from sqlite3.dbapi2 import Error
-from .db_conf import ConnectDB, TABLE_NAME
 from typing import Any, Union, List, Tuple
 
-# Insert many
-# VALUES ('John', 'Brown', 'john@elder.com')
-# cur.executemany("INSERT INTO customers VALUES (?, ?, ?)", customers)
-# conn.commit()
+from datetime import datetime
+from .db_conf import ConnectDB, TABLE_NAME
+
+('book b', '978-3-16-148410-1', 'finished')
 
 def insert_book(book_info: Union[List[str], Tuple[str]]) -> None:
-    """insert a book to the database"""
+    """insert a book to the database (title, isbn, tuple)"""
     with ConnectDB() as (conn, cur):
         cur.execute(f"""
             INSERT INTO {TABLE_NAME} 
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, {datetime.now().strftime('%c')})
         """, book_info)
         conn.commit()
 
@@ -48,14 +46,14 @@ def update_book_status(title: str, status: str) -> None:
         conn.commit()
 
 
-def update_book(id: int, key: str, val: str) -> None:
+def update_book_isbn(title: str, isbn: str) -> None:
     """
-    Update arbitary (key, value) from rowid
+    Update book isbn
     """
     with ConnectDB as (conn, cur):
         cur.execute(f"""
             UPDATE {TABLE_NAME}
-            SET {key} = "{val}"
-            WHERE rowid={id}
+            SET isbn="{isbn}"
+            WHERE title="{title}"
         """)
         conn.commit()

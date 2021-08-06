@@ -1,5 +1,7 @@
 import PySimpleGUI as sg
 
+from db_handler.read_write_db import get_books_from_status
+from .form import add_book_form
 
 ## ----- CONFIGS ----- ##
 sg.change_look_and_feel('Dark')
@@ -24,26 +26,49 @@ window = sg.Window(
     finalize=True,
     )
 
-## ----- MAIN EVENT LOOP --- ##
+## ----- FUNCTIONS ----- ##
+
+def render_reading() -> None:
+    books = get_books_from_status('reading')
+    print(books)
+
+
+def render_suspended() -> None:
+    books = get_books_from_status('suspended')
+    print(books)
+
+
+def render_plan_to_read() -> None:
+    books = get_books_from_status('plan-to-read')
+    print(books)
+
+
+def render_finished() -> None:
+    books = get_books_from_status('finished')
+    print(books)
+
+
+## ----- MAIN EVENT LOOP ----- ##
 def main() -> None:
     while True:
         event, values = window.read()
-        if event in (sg.WINDOW_CLOSED, 'Quit'): break
+        if event in (sg.WINDOW_CLOSED, 'Exit'): break
         
         if event == '_ADD_':
-            # layout.append([sg.T('Nice')])
             print('Add book')
+            add_book_form()
+            # layout.append([sg.T('Book')])
         
         if event in ('_READ_', '_PLAN_','_SUSPEND_', '_FINISHED_'):
             print('Change view')
             if event == '_READ_':
-                print('render read')
+                render_reading()
             elif event == '_PLAN_':
-                print('render plan')
+                render_plan_to_read()
             elif event == '_SUSPEND_':
-                print('render suspend')
+                render_suspended()
             else:
-                print('render finished')
+                render_finished()
 
 if __name__ == '__main__':
     pass
