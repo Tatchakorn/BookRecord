@@ -16,7 +16,7 @@ class ConnectDB:
             # create a database connection
             self.conn = sqlite3.connect(DB_PATH)
         except Error as e:
-            print(e)
+            print('[ERROR] DB not connected', e)
         self.cur = self.conn.cursor()
 
     def __enter__(self) -> Tuple[object]:

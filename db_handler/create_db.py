@@ -2,7 +2,8 @@
 Call once or lose all data !!
 """
 
-from .db_conf import *
+from .db_conf import ConnectDB
+from sqlite3 import Error
 
 # Mysqlite3 has 5 data types
 # 1. NULL -> None
@@ -37,12 +38,22 @@ def create_db() -> None:
     Create a Table
     """
     with ConnectDB() as (conn, cur):
+        # example row 
+        # status = {'reading', 'plan-to-read', 'suspended', 'finished'}
+        # datetime.now().strftime("%c")
+        # ('book a', '978-3-16-148410-0', 'reading', 'Fri Aug  6 13:45:20 2021')
         sql_create_table = """ 
-            CREATE TABLE customers(
-                first_name TEXT,
-                last_name TEXT,
-                email TEXT)
+            CREATE TABLE books(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                isbn TEXT,
+                status TEXT NOT NULL,
+                updated_at TEXT)
             """
-        cur.execute(sql_create_table)
-        # Commit the command
-        conn.commit()
+        try:
+            cur.execute(sql_create_table)
+        except Error as e:
+            print('[ERROR] DB not created', e)
+        else:
+            # Commit the command
+                conn.commit()
