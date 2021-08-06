@@ -1,5 +1,6 @@
-from .db_conf import ConnectDB
-from typing import Union, List, Tuple
+from sqlite3.dbapi2 import Error
+from .db_conf import ConnectDB, TABLE_NAME
+from typing import Any, Union, List, Tuple
 
 # Insert many
 # VALUES ('John', 'Brown', 'john@elder.com')
@@ -7,36 +8,54 @@ from typing import Union, List, Tuple
 # conn.commit()
 
 def insert_book(book_info: Union[List[str], Tuple[str]]) -> None:
-    """
-    insert a book to the database
-    """
+    """insert a book to the database"""
     with ConnectDB() as (conn, cur):
-        cur.execute("""
-            INSERT INTO books 
+        cur.execute(f"""
+            INSERT INTO {TABLE_NAME} 
             VALUES (?, ?, ?, ?)
         """, book_info)
         conn.commit()
 
 
-# def update_db():
-#     with ConnectDB as (conn, cur):
-#         cur.execute("""
-#             UPDATE customers
-#             SET first_name = 'Brian'
-#             WHERE rowid=6
-#         """)
-#         conn.commit()
+def get_all_books() -> List[Tuple[Any]]:
+    """get all books"""
+    books = None
+    with ConnectDB() as (conn, cur):
+        query = f'SELECT rowid, * FROM  {TABLE_NAME}'    
+        cur.execute(query)
+        books = cur.fetchall()
+    return books
 
 
-# def query_db():
-#     with ConnectDB as (conn, cur):
-#         # rowid is auto-generated
-#         query = "SELECT rowid, * FROM  customers"
-#         # query = "SELECT first_name FROM  customers WHERE  last_name='Cartman'"
-#         # query = "SELECT first_name, last_name FROM  customers WHERE  email LIKE '%cartman%'"
-        
-#         cur.execute(query)
-#         # cur.fetchone()
-#         # cur.fetchmany(2)
-#         # cur.fetchall()
-#         return cur.fetchall()
+def get_books_from_status(status: str) -> List[Tuple[Any]]:
+    """get all books from status"""
+    books = None
+    with ConnectDB() as (conn, cur):
+        query = f'SELECT rowid, * FROM  {TABLE_NAME} WHERE status="{status}"' 
+        cur.execute(query)
+        books = cur.fetchall()
+    return books
+
+
+def update_book_status(title: str, status: str) -> None:
+    """Update book status"""
+    with ConnectDB() as (conn, cur):
+        cur.execute(f"""
+            UPDATE {TABLE_NAME}
+            SET status="{status}"
+            WHERE title="{title}"
+        """)
+        conn.commit()
+
+
+def update_book(id: int, key: str, val: str) -> None:
+    """
+    Update arbitary (key, value) from rowid
+    """
+    with ConnectDB as (conn, cur):
+        cur.execute(f"""
+            UPDATE {TABLE_NAME}
+            SET {key} = "{val}"
+            WHERE rowid={id}
+        """)
+        conn.commit()

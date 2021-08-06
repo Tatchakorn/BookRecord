@@ -2,7 +2,7 @@
 Call once or lose all data !!
 """
 
-from .db_conf import ConnectDB
+from .db_conf import ConnectDB, TABLE_NAME
 from sqlite3 import Error
 
 # Mysqlite3 has 5 data types
@@ -12,7 +12,9 @@ from sqlite3 import Error
 # 4. TEXT -> str
 # 5. BLOB -> bytes
 
+
 # Example
+# rowid is auto-generated
 # -- projects table
 # CREATE TABLE IF NOT EXISTS projects (
 # 	id integer PRIMARY KEY,
@@ -42,10 +44,9 @@ def create_db() -> None:
         # status = {'reading', 'plan-to-read', 'suspended', 'finished'}
         # datetime.now().strftime("%c")
         # ('book a', '978-3-16-148410-0', 'reading', 'Fri Aug  6 13:45:20 2021')
-        sql_create_table = """ 
-            CREATE TABLE books(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
+        sql_create_table = f""" 
+            CREATE TABLE {TABLE_NAME}(
+                title TEXT UNIQUE NOT NULL,
                 isbn TEXT,
                 status TEXT NOT NULL,
                 updated_at TEXT)

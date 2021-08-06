@@ -7,7 +7,8 @@ from typing import Tuple
 import sqlite3
 
 DB_NAME = 'book.db'
-DB_PATH = os.path.join(DB_NAME) # Add additional path later
+TABLE_NAME = 'books'
+DB_PATH = os.path.join(DB_NAME) # Additional path can be added later
 
 
 class ConnectDB:
