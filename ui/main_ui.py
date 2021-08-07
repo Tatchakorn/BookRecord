@@ -61,6 +61,7 @@ window = sg.Window(
         margins=(0,0),
         finalize=True,
         return_keyboard_events=True,
+        icon=r'./ui/assets/books.ico'
     )
 
 ## ----- HELPER FUNCTIONS ----- ##
@@ -104,9 +105,6 @@ def main() -> None:
         
         event, values = window.read()
 
-        print(event)
-        print(values)
-        
         if event in (sg.WINDOW_CLOSED, 'Exit'): break
         
         if values['_SEARCH-INPUT_'] != '' and event != '_BOOK-LIST_':
