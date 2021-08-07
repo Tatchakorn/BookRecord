@@ -1,6 +1,6 @@
 # My book record
 
-![Demo photo](ui\assets\book_record_demo.jpg)
+![Demo photo](./ui/assets/book_record_demo.jpg)
 
 
 ## use pyinstaller
