@@ -10,7 +10,7 @@ def insert_book(book_info: Union[List[str], Tuple[str]]) -> None:
     with ConnectDB() as (conn, cur):
         cur.execute(f"""
             INSERT INTO {TABLE_NAME} 
-            VALUES (?, ?, ?, {datetime.now().strftime('%c')})
+            VALUES (?, ?, ?, "{datetime.now().strftime('%c')}")
         """, book_info)
         conn.commit()
 
