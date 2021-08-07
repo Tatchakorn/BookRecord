@@ -13,11 +13,22 @@ def insert_book(book_info: Union[List[str], Tuple[str]]) -> None:
         conn.commit()
 
 
-def get_all_books() -> List[Tuple[Any]]:
+def get_all_books(cols: Union[List[str], Tuple[str]] = []) -> List[Tuple[Any]]:
     """get all books"""
     books = None
+    cols = 'rowid, *' if not cols else ' '.join(cols) # defualt select all
     with ConnectDB() as (conn, cur):
-        query = f'SELECT rowid, * FROM  {TABLE_NAME}'    
+        query = f'SELECT {cols} FROM  {TABLE_NAME}'    
+        cur.execute(query)
+        books = cur.fetchall()
+    return books
+
+
+def get_book_status(id: int) -> Tuple[str]:
+    """get all books"""
+    status = None
+    with ConnectDB() as (conn, cur):
+        query = f'SELECT {cols} FROM  {TABLE_NAME}'    
         cur.execute(query)
         books = cur.fetchall()
     return books

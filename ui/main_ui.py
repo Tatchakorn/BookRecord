@@ -2,11 +2,14 @@ from typing import Any, List, Tuple
 import PySimpleGUI as sg
 
 from db_handler.read_write_db import (
+    get_all_books,
     get_books_from_status,
     get_book_from_title,
     delete_book,
 )
-from .popups import (
+
+
+from ui.popups import (
     add_update_book_form, 
     popup_confirm, 
     popup_no_select,
@@ -31,7 +34,7 @@ bt = {'size': (WIN_WIDTH//4,2), 'font': ('Franklin Gothic Book', BTN_FONT_SIZE),
     'button_color': ('white', 'green'), 'pad': (0,0)}
 
 listbox_default_conf = {'values': [], 'enable_events': True, 
-    'size': (LIST_BOX_W, LIST_BOX_H), 'visible': False}
+    'size': (LIST_BOX_W, LIST_BOX_H), 'visible': True}
 ## ----- WINDOW AND LAYOUT ----- ##
 
 layout = [
@@ -49,121 +52,94 @@ layout = [
         sg.Button('Update', key='_UPDATE_', button_color=('white', '#a34c00')),
         sg.Button('Delete', key='_DELETE_', button_color=('white', 'red')),
     ],
-    [   
-        sg.Listbox(**listbox_default_conf, key='_READ-LIST_'),
-        sg.Listbox(**listbox_default_conf, key='_SUSPEND-LIST_'),
-        sg.Listbox(**listbox_default_conf, key='_PLAN-LIST_'),
-        sg.Listbox(**listbox_default_conf, key='_FINISH-LIST_'),
-    ],
+    [sg.Listbox(**listbox_default_conf, key='_BOOK-LIST_'),],
 ]
 
 window = sg.Window(
-    'Book Record', 
-    layout=layout, 
-    margins=(0,0),
-    finalize=True,
-    return_keyboard_events=True,
+        'Book Record', 
+        layout=layout, 
+        margins=(0,0),
+        finalize=True,
+        return_keyboard_events=True,
     )
 
 ## ----- HELPER FUNCTIONS ----- ##
 
 def format_book_text(books: List[Tuple[Any]]) -> List[str]:
     return [
-        f'{book[1]}' 
+        f'{book[1]} [{book[4]}]' 
         for book in books
     ]
 
-
-def hide_all_lists() -> None:
-    """Too lazy to implement this properly"""
-    window['_READ-LIST_'].update(visible=False)
-    window['_SUSPEND-LIST_'].update(visible=False)
-    window['_PLAN-LIST_'].update(visible=False)
-    window['_FINISH-LIST_'].update(visible=False)
+def extract_book_title(text: str) -> str:
+    """Extract title from format_book_text maipulation"""
+    return text.split('[')[0][:-1]
 
 ## ----- RENDER LIST ----- ##
-stbtn_to_list = { # Maping from (status, button_select_view) -> LIST
-    'reading': '_READ-LIST_',
-    'suspended': '_SUSPEND-LIST_',
-    'plan-to-read': '_PLAN-LIST_',
-    'finished': '_FINISH-LIST_',
-    '_READ_': '_READ-LIST_',
-    '_SUSPEND_': '_SUSPEND-LIST_',
-    '_PLAN_': '_PLAN-LIST_',
-    '_FINISHED_': '_FINISH-LIST_',
-}
-
 btn_to_st = {  # Maping from button -> status
-    '_READ_': 'reading',
-    '_SUSPEND_': 'suspended',
-    '_PLAN_': 'plan-to-read',
-    '_FINISHED_': 'finished',
-    
-}
+        '_READ_': 'reading',
+        '_SUSPEND_': 'suspended',
+        '_PLAN_': 'plan-to-read',
+        '_FINISHED_': 'finished',
+    }
 
-
-def render(status: str) -> None:
-    hide_all_lists() # only show the selected one
-    books = get_books_from_status(status)
-    books = format_book_text(books)
-    window[stbtn_to_list[status]].update(values=books, visible=True)
+def render(status: str, key: str = '') -> None:
+    if status == 'search':
+        books = format_book_text(get_all_books())
+        s_books = [book for book in books if key in book.lower()]  # do the filtering (case insensitive)
+        window['_BOOK-LIST_'].update(values=s_books) # display in the listbox
+    else:
+        books = get_books_from_status(status)
+        books = format_book_text(books)
+        window['_BOOK-LIST_'].update(values=books)
 
 
 ## ----- MAIN EVENT LOOP ----- ##
-STARTUP = True
+
+key_search = ''
+selecting_view = ''
 def main() -> None:
     while True:
-        global STARTUP
-        
-        if STARTUP: # No fetch startup
-            window['_READ-LIST_'].update(visible=True)
-            selecting_view = '_READ_'
-            STARTUP = False
+        global key_search, selecting_view
         
         event, values = window.read()
 
         print(event)
         print(values)
         
-        if event == '\r': # Hit Enter key
-            elem = window.FindElementWithFocus()
-            if elem is not None:
-                try:
-                    elem.Click()
-                except:
-                    print('Cannot click the element')
-        
         if event in (sg.WINDOW_CLOSED, 'Exit'): break
         
-        if values['_SEARCH-INPUT_'] != '':
-            print('Search for something')
-            # search = values['_SEARCH-INPUT']
-            # new_values = [x for x in names if search in x]  # do the filtering
-            # window.Element('_LIST_').Update(new_values)     # display in the listbox
-            # render('search')
+        if values['_SEARCH-INPUT_'] != '' and event != '_BOOK-LIST_':
+            selecting_view = 'search'
+            key_search = values['_SEARCH-INPUT_'].lower()
+            render('search', key_search)
         
         if event in ('_ADD_', '_DELETE_', '_UPDATE_'):
             if event == '_ADD_':
-                print(add_update_book_form())
+                add_update_book_form()
+                render(btn_to_st.get(selecting_view, 'search'), key_search)       # Update view
             elif event == '_UPDATE_':
-                selected_book_title = values[stbtn_to_list[selecting_view]]
+                selected_book_title = values['_BOOK-LIST_']
                 if not selected_book_title:                 # Empty list
                     popup_no_select('update')
                 else:
-                    b_info = get_book_from_title(selected_book_title[0])
+                    book_title = extract_book_title(selected_book_title[0])
+                    b_info = get_book_from_title(book_title)
                     add_update_book_form(b_info[1], b_info[2], b_info[3], update=True, id=b_info[0])
-                    render(btn_to_st[selecting_view])       # Update view
+                    render(btn_to_st.get(selecting_view, 'search'), key_search)       # Update view
             elif event == '_DELETE_':
-                selected_book_title = values[stbtn_to_list[selecting_view]]
+                selected_book_title = values['_BOOK-LIST_']
+                print(selected_book_title)
                 if not selected_book_title:                 # Empty list
                     popup_no_select('delete')
                 else:
-                    print(f'Deleting {selected_book_title[0]}')
                     if popup_confirm('delete'):
-                        b_info = get_book_from_title(selected_book_title[0])
+                        book_title = extract_book_title(selected_book_title[0])
+                        b_info = get_book_from_title(book_title)
                         print(b_info)
                         delete_book(b_info[0])
-                        render(btn_to_st[selecting_view])   # Update view
+                        render(btn_to_st.get(selecting_view, 'search'), key_search)       # Update view
+        
         if event in ('_READ_', '_PLAN_','_SUSPEND_', '_FINISHED_'):
             if event == '_READ_':
                 selecting_view = event
@@ -177,6 +153,5 @@ def main() -> None:
             else:
                 selecting_view = event
                 render('finished')
-
 if __name__ == '__main__':
     pass
