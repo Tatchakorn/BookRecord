@@ -12,7 +12,7 @@ from db_handler.create_db import create_db
 from db_handler.db_conf import DB_PATH
 from ui import main_ui
 
-# if database is not exist
+# if database does not exist
 if not os.path.isfile(DB_PATH):
     create_db()
 
